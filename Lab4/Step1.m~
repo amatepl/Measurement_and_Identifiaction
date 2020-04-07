@@ -5,10 +5,10 @@ close all; clear;clc;
 %%% System Parameters ----------------------------------------------------
 filterOrder = 2;
 ripple = 3;             % 3dB
-range = [0.3 0.4];      % initial = [0.3 0.6]. Decrease for part 4.3.5
+range = [0.3 0.6];      % initial = [0.3 0.6]. Decrease for part 4.3.5
 truncation = 38;
 Ne = truncation*10;
-SNR = 6;            % dB
+SNR = 6; 
 np = 100;           % Maximum number of parameters
 Nruns = 100;        % Maximum number of experiment runs
 %%%-----------------------------------------------------------------------
@@ -84,6 +84,13 @@ end
 
 
 
+
+
+
+
+
+
+
 % figure;hold on;
 % plot(V);
 % ylabel('V_{LS}');
@@ -121,17 +128,12 @@ title(tit);
 % 4.3.6 Determine the robustnes of the model order estimation
 figure;hold on;
 hist(Vmin,1:np);
-xlabel('Number of runs');
-% title(join(['Estimated model order for V_{LS} with ',num2str(Nruns),' runs']));
+title(join(['Estimated model order for ',num2str(Nruns),' runs']));
 
 figure;hold on;
 hist(VAICmin,1:np);
-xlabel('Number of runs');
-% title(join(['Estimated model order for V_{AIC} with ',num2str(Nruns),' runs']));
 
 figure;hold on;
 hist(Vvalmin,1:np);
-xlabel('Number of runs');
-% title(join(['Estimated model order for V_{val} with ',num2str(Nruns),' runs']));
 
 
