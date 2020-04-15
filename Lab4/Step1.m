@@ -36,7 +36,7 @@ for run = 1:Nruns
     ue = randn([Ne,1]);     % Dataset for the estimation of the model
     uv = randn([Ne,1]);     % Dataset for the validation of the model
 
-    ye = filter(num,denom,ue);
+    ye = filter(num,denom,ue);  % Noiseless output of the system
     yv = filter(num,denom,uv);
     
     % Noise
@@ -50,7 +50,7 @@ for run = 1:Nruns
     sdv = sqrt(varv);
     noisev = sdv*randn([Ne,1]);
 
-    ye = ye + noisee;
+    ye = ye + noisee;       % Output of the system
     yv = yv + noisev;
     
     % 4.3.3 Implement the lest squares for varying n
