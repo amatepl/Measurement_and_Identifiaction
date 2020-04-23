@@ -5,7 +5,7 @@ close all; clear;clc;
 %%% System Parameters ----------------------------------------------------
 filterOrder = 2;
 ripple = 3;             % 3dB
-range = [0.3 0.4];      % initial = [0.3 0.6]. Decrease for part 4.3.5
+range = [0.3 0.6];      % initial = [0.3 0.6]. Decrease for part 4.3.5
 truncation = 38;
 Ne = truncation*10;
 SNR = 6;            % dB
@@ -16,11 +16,22 @@ Nruns = 100;        % Maximum number of experiment runs
 % 4.3.1 Build the discrite time test
 
 % Chebycheff filter creation
+
 [num,denom] = cheby2(filterOrder,ripple,range);
+figure;hold on;
+freqz(num,denom);
 F = tf(num,denom,1);
 [F,t] = impulse(F);
 
 G = F(1:truncation);                % G is the model
+
+figure; hold on;
+plot(F);
+xlabel('n');
+ylabel('F');
+
+% freq(G);
+%%
 
 V = zeros([np,Nruns]);      % Least squares estimation cost function
 VAIC = zeros([np,Nruns]);
@@ -119,19 +130,35 @@ title(tit);
 % Set different values of the SNR above
 
 % 4.3.6 Determine the robustnes of the model order estimation
-figure;hold on;
+% figure;hold on;
+% hist(Vmin,1:np);
+% xlabel('Number of runs');
+% % title(join(['Estimated model order for V_{LS} with ',num2str(Nruns),' runs']));
+% 
+% figure;hold on;
+% hist(VAICmin,1:np);
+% xlabel('Number of runs');
+% % title(join(['Estimated model order for V_{AIC} with ',num2str(Nruns),' runs']));
+% 
+% figure;hold on;
+% hist(Vvalmin,1:np);
+% xlabel('Number of runs');
+% % title(join(['Estimated model order for V_{val} with ',num2str(Nruns),' runs']));
+
+figure('Position',[500 500 2000 500]);hold on;
+set(gca,'DataAspectRatio',[1,1,1])
+title(join(['SNR = ',num2str(SNR)]));
+subplot(1,3,1);
 hist(Vmin,1:np);
 xlabel('Number of runs');
-% title(join(['Estimated model order for V_{LS} with ',num2str(Nruns),' runs']));
-
-figure;hold on;
+title("V_{LS}");
+subplot(1,3,2);
 hist(VAICmin,1:np);
 xlabel('Number of runs');
-% title(join(['Estimated model order for V_{AIC} with ',num2str(Nruns),' runs']));
-
-figure;hold on;
+title('V_{AIC}');
+subplot(1,3,3);
 hist(Vvalmin,1:np);
 xlabel('Number of runs');
-% title(join(['Estimated model order for V_{val} with ',num2str(Nruns),' runs']));
+title('V_{val}');
 
 
