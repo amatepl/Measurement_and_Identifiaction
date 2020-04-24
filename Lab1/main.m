@@ -243,5 +243,23 @@ plot(fq,abs(fftshift(fft(Sy9))));
 % plot(fq,abs(fftshift(fft(Su9))));
 
 
+load('group09_output4.mat')
 
+frf1 = FRF(Su1,Sy1);
+frf9 = FRF(Su9,Sy9);
+% freqz(frf9);
+%%
+figure; hold on;
+subplot(1,3,1);
+plot(abs(frf9));
+title('FRF periodic noise')
+%xlim([-500 500]);
+subplot(1,3,2);
+plot(abs(frf1));
+title('FRF aperiodic noise')
+subplot(1,3,3);
+[Hann] = hanning(length(Sy1),'periodic');
+frf1 = FRF(Su1.*Hann,Sy1.*Hann);
+plot(abs(frf1));
+title('FRF aperiodic noise times Hann')
 

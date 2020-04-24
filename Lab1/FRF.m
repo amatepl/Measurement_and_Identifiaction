@@ -19,6 +19,6 @@ Y = fftshift(fft(Sy));
 %
 
 % FRF computation
-threshold = 6; 
+threshold = 0.00; 
 
-H = Y(U >threshold)./U(U > threshold);
+H = Y(abs(U) >threshold)./U(abs(U) > threshold);
