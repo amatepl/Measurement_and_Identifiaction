@@ -1,10 +1,24 @@
-clear; close all;clc;
-%%
-% 
-%  Measuring transfer functions
-%  
-% 
 
+% This LaTeX was auto-generated from MATLAB code.
+% To make changes, update the MATLAB code and republish this document.
+
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{color}
+
+\sloppy
+\definecolor{lightgray}{gray}{0.5}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+    
+    \begin{verbatim}
+clear; close all;clc;
+\end{verbatim}
+
+\begin{verbatim}Measuring transfer functions\end{verbatim}
+    \begin{verbatim}
 % Generation of multisine signals.
 
 t = 1:4096;     % Time
@@ -87,38 +101,43 @@ xlabel('Frequency');
 subplot(3,2,6);
 plot(fq,abs(fft_schro));
 xlabel('Frequency');
+\end{verbatim}
 
-%%
-%
-% DUT measurements
-%
-%
+        \color{lightgray} \begin{verbatim}Crest factors: 
+Constant phase multisine:  10.2979
+Random phase multisine:    3.5714
+Schroeder phase multisine: 1.908
+\end{verbatim} \color{black}
+    
+\includegraphics [width=4in]{main_01.eps}
 
+\includegraphics [width=4in]{main_02.eps}
+\begin{par}
+DUT measurements
+\end{par} \vspace{1em}
+\begin{verbatim}
 % DUT parameters
 
 bandwidth = 500;
 fs = 8e3;          % Sampling frequency
 
-% Generation of the multisine 
-
-%%
-% $\omega_{0} = \frac{2\pi f_{s}}{N}$
-
+% Generation of the multisine
+\end{verbatim}
+\begin{par}
+$\omega_{0} = \frac{2\pi f_{s}}{N}$
+\end{par} \vspace{1em}
+\begin{verbatim}
 N = fs;
 t = 1:N;
 K_max = 500;
 K = 1:K_max;      % Number of excited spectral lines
 
 % Schroeder phase
-
-% Time domain construction
 phi = K.*(K+1)*pi/length(K);
 u_sch_500 = sum(sin(2*pi*t'*K/length(t) + phi),2);
 u_sch_500 = 0.1*u_sch_500/rms(u_sch_500);
 
-% Frequency domain 
-
-% FFT 
+% FFT
 fft_u_sch_500 = fftshift(fft(u_sch_500));
 
 % Plots
@@ -135,11 +154,13 @@ legend('Schroeder phase spectrum');
 
 % Save the input signal
 save('Group9_Input1.mat','u_sch_500');
+\end{verbatim}
 
-%%
-% Excitation signals
-%
-
+\includegraphics [width=4in]{main_03.eps}
+\begin{par}
+Excitation signals
+\end{par} \vspace{1em}
+\begin{verbatim}
 % Periodic
 
 % Constant phase multisine
@@ -173,4 +194,11 @@ subplot(1,2,1);
 plot(noise_aper);
 subplot(1,2,2);
 plot(t,noise_aper_h,t,Hann);
+\end{verbatim}
 
+\includegraphics [width=4in]{main_04.eps}
+
+
+
+\end{document}
+    

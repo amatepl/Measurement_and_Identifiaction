@@ -151,7 +151,7 @@ plot(fq,abs(fft_schro));
 xlabel(<span class="string">'Frequency'</span>);
 </pre><pre class="codeoutput">Crest factors: 
 Constant phase multisine:  10.2979
-Random phase multisine:    3.2418
+Random phase multisine:    3.3701
 Schroeder phase multisine: 1.908
 </pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <img vspace="5" hspace="5" src="main_02.png" alt=""> <p>DUT measurements</p><pre class="codeinput"><span class="comment">% DUT parameters</span>
 
@@ -199,14 +199,27 @@ multisine_rand = sum(sin(2*pi*t'*K/length(t) + phi),2);
 multisine_rand = 0.1*multisine_const/rms(multisine_rand);
 
 <span class="comment">% Periodic noise signal</span>
-d = 80;
+d = 1;
 period = N/d;
 noise_per = randn([period,1]);
 noise_per = repmat(noise_per,d);
 noise_per = 0.1*noise_per/rms(noise_per);
 
 <span class="comment">% Aperiodic</span>
-</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
+
+noise_aper = randn([N,1]);
+noise_aper = 0.1*noise_aper/rms(noise_per);
+
+<span class="comment">% Multiplyin the noise by the Hanning window</span>
+[Hann] = hanning(N,<span class="string">'periodic'</span>);
+noise_aper_h = noise_aper.*Hann;
+
+figure(<span class="string">'Position'</span>,[500 500 800 420]);hold <span class="string">on</span>;
+subplot(1,2,1);
+plot(noise_aper);
+subplot(1,2,2);
+plot(t,noise_aper_h,t,Hann);
+</pre><img vspace="5" hspace="5" src="main_04.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 clear; close all;clc;
 %%
@@ -359,7 +372,7 @@ multisine_rand = sum(sin(2*pi*t'*K/length(t) + phi),2);
 multisine_rand = 0.1*multisine_const/rms(multisine_rand);
 
 % Periodic noise signal
-d = 80;
+d = 1;
 period = N/d;
 noise_per = randn([period,1]);
 noise_per = repmat(noise_per,d);
@@ -367,6 +380,18 @@ noise_per = 0.1*noise_per/rms(noise_per);
 
 % Aperiodic
 
+noise_aper = randn([N,1]);
+noise_aper = 0.1*noise_aper/rms(noise_per);
+
+% Multiplyin the noise by the Hanning window
+[Hann] = hanning(N,'periodic');
+noise_aper_h = noise_aper.*Hann;
+
+figure('Position',[500 500 800 420]);hold on;
+subplot(1,2,1);
+plot(noise_aper);
+subplot(1,2,2);
+plot(t,noise_aper_h,t,Hann);
 
 
 ##### SOURCE END #####
