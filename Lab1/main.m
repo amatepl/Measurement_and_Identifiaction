@@ -242,13 +242,24 @@ plot(fq,abs(fftshift(fft(Sy9))));
 % subplot(1,2,2);
 % plot(fq,abs(fftshift(fft(Su9))));
 
-
 load('group09_output4.mat')
 
 frf1 = FRF(Su1,Sy1);
 frf9 = FRF(Su9,Sy9);
 % freqz(frf9);
 %%
+
+figure;
+subplot(1,3,1);
+plot(abs(fftshift(fft(Sy1))));
+title('Aperiodic');
+subplot(1,3,2);
+plot(abs(fftshift(fft(Sy9))));
+title('Periodic');
+subplot(1,3,3);
+plot(abs(fftshift(fft(Sy9))) - abs(fftshift(fft(Sy1))));
+title('difference');
+
 figure; hold on;
 subplot(1,3,1);
 plot(abs(frf9));
@@ -263,3 +274,7 @@ frf1 = FRF(Su1.*Hann,Sy1.*Hann);
 plot(abs(frf1));
 title('FRF aperiodic noise times Hann')
 
+y = randn(1,N);
+y = 0.1*y/rms(y);
+
+save('Group09_Input4.Mat','y')
