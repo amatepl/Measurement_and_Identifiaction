@@ -7,7 +7,7 @@ clear;close all;clc;
 % 
 
 % Continuous time Butterworth filter
-% Filter order : 2
+% Filter order : 1
 % Cutoff angular frequency : [0.01,0.2]
 
 [B_tilde,A_tilde] = butter(1,[0.01,0.2],'s');
@@ -15,19 +15,19 @@ clear;close all;clc;
 B_tilde = B_tilde/A_tilde(3);
 A_tilde = A_tilde/A_tilde(3);
 
-w_start = 0;
-w_stop = 1;
+w_start = 0.001;
+w_stop = 2;
 
-N = 100;            % Number of frequencies
+N = 500;            % Number of frequencies
 
 W = linspace(w_start,w_stop,N)';
 
 % Exact frequency response of the reference filter
-G_0 = freqs(B_tilde,A_tilde,N);
+G_0 = freqs(B_tilde,A_tilde,W);
 % freqs(B_tilde,A_tilde,N)
 
 % Circular zero mean white noise
-sigma = 0.001*0;          % Standard deviation
+sigma = 0.001;          % Standard deviation
 noise = sigma*(randn(N,1) + 1i*randn(N,1))/sqrt(2);
 
 % Measured frequncy response
@@ -84,11 +84,9 @@ theta_true = (theta_true).';
 % 
 
 % Cost function vectorization
-% e_Levy = G_m + G_m.*(A_prime) - B;    % For perfect reconstruction
 e_Levy = G_m ;
 
 % Jacobian
-% J_Levy = [-s_all(:,1) -s_all(:,2) -s_all(:,3) G_m.*s_all(:,1) G_m.*s_all(:,2) G_m.*s_all(:,3)];
 J_Levy = [-s_all(:,1) -s_all(:,2) -s_all(:,3) G_m.*s_all(:,1) G_m.*s_all(:,2)];
 
 % Real/imaginary part separation
@@ -98,12 +96,16 @@ J_Levy_IR = [real(J_Levy) ; imag(J_Levy)];
 % Levy theta estimation
 theta_Levy = -J_Levy_IR\e_Levy_IR;
 
+GestLevy = freqs(theta_Levy(1:3),[theta_Levy(4:5); 1],W);
+%%
+figure
+plot(W,db(GestLevy),'o',W,db(G_m),'*',W,db(G_0),'+')
+
 disp('Parameters comparison'); 
 disp(join(['True theta:           ',num2str(theta_true.')]));
 disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end).')]));
 % disp(join(['Difference:           ',num2str(theta_true.' - theta_Levy(1:end-1).')]));
 
-keyboard
 
 %%
 % 
@@ -115,8 +117,9 @@ keyboard
 l_max = 8;
 
 % Computing B with new parameters
-B = flip(theta_Levy(1:3).').*s(:,1:3);
-B = sum(B,2);
+% B = (theta_Levy(1:3).').*s_all(:,1:3);
+% B = sum(B,2);
+B = polyval(theta_Levy(1:3),s)
 
 % Computing A with new parameters
 A_prime = theta_Levy(4:5);
@@ -124,7 +127,8 @@ A_prime = flip(A_prime.').*s(:,2:3);
 A_prime = sum(A_prime,2);
 
 % Cost function vectorization
-e_San = (G_m + G_m.*(A_prime) - B)./vecnorm(1+A_prime,2,2);
+% e_San = (G_m + G_m.*(A_prime) - B)./vecnorm(1+A_prime,2,2);
+s_San = G_m;
 
 % Jacobian
 J_San = J_Levy./vecnorm(1+A_prime.',2,2);
