@@ -10,40 +10,42 @@ clear;close all;clc;
 % Filter order : 2
 % Cutoff angular frequency : [0.01,0.2]
 
-[B_tilde,A_tilde] = butter(2,[0.01,0.2],'s');
+[B_tilde,A_tilde] = butter(1,[0.01,0.2],'s');
 
 w_start = 0;
 w_stop = 1;
 
 N = 100;            % Number of frequencies
 
-W = linspace(w_start,w_stop,N);
+W = linspace(w_start,w_stop,N)';
 
 % Exact frequency response of the reference filter
 G_0 = freqs(B_tilde,A_tilde,N);
 freqs(B_tilde,A_tilde,N)
 
 % Circular zero mean white noise
-sigma = 0.001;          % Standard deviation
-noise = sigma*(randn(N,1) + 1i*randn(N,1));
+sigma = 0.001*0;          % Standard deviation
+noise = sigma*(randn(N,1) + 1i*randn(N,1))/sqrt(2);
 
 % Measured frequncy response
 G_m = G_0 + noise;
 
 % Rewrite the transfer funciton
 s = 1i*W;
-s = s.^((0:length(B_tilde)-1)');
+s_all = s.^((0:length(B_tilde)-1));
 
 %%
 % $B(s,a) = b_{2}s^{2}+b_{1}s+b_{0}$
-B = (B_tilde.').*s/A_tilde(1);
-B = sum(B,1);
+% B = (B_tilde).*s_all/A_tilde(1);
+% B = sum(B,2);
+B = polyval(B_tilde,s);
 
 %%
 % $A'(s,a) = a_{2}s^{2}+a_{1}s$
-A_prime = A_tilde(2:end)/A_tilde(1);
-A_prime = A_prime.'.*s(2:end,:);
-A_prime = sum(A_prime,1);
+% A_prime = A_tilde(2:end)/A_tilde(1);
+% A_prime = A_prime.'.*s(2:end,:);
+% A_prime = sum(A_prime,1);
+A_prime = polyval(A_tilde(2:3),s);
 
 % True parameters
 theta_true = [A_tilde(2:3) B_tilde(1:3)];
@@ -75,23 +77,25 @@ legend('Exact frequency response','Measured frequncy response');
 % 
 
 % Cost function vectorization
-s = s.'; 
-e_Levy = G_m + G_m.*(A_prime.') - B.';
+% e_Levy = G_m + G_m.*(A_prime.') - B.';    % For perfect reconstruction
+e_Levy = G_m ;
 
 % Jacobian
-J_Levy = [-s(:,3) -s(:,2) -s(:,1) G_m.*s(:,3) G_m.*s(:,2) G_m.*s(:,1)];
+J_Levy = [-s_all(:,3) -s_all(:,2) -s_all(:,1) G_m.*s_all(:,3) G_m.*s_all(:,2) G_m.*s_all(:,1)];
 
 % Real/imaginary part separation
 e_Levy_IR = [real(e_Levy) ; imag(e_Levy)]; 
 J_Levy_IR = [real(J_Levy);imag(J_Levy)];
 
 % Levy theta estimation
-theta_Levy = J_Levy_IR\e_Levy_IR;
+theta_Levy = -J_Levy_IR\e_Levy_IR;
 
 disp('Parameters comparison');
 disp(join(['True theta:           ',num2str(theta_true.')]));
 disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end-1).')]));
-disp(join(['Difference:           ',num2str(theta_true.' - theta_Levy(1:end-1).')]));
+% disp(join(['Difference:           ',num2str(theta_true.' - theta_Levy(1:end-1).')]));
+
+keyboard
 
 %%
 % 
@@ -100,13 +104,19 @@ disp(join(['Difference:           ',num2str(theta_true.' - theta_Levy(1:end-1).'
 % 
 
 % Iteration index
-l_max = 3;
+l_max = 8;
 
-% A'
-A_prime = A_prime; % PROBABLY WRONG
+% Computing B with new parameters
+B = flip(theta_Levy(1:3).').*s(:,1:3);
+B = sum(B,2);
+
+% Computing A with new parameters
+A_prime = theta_Levy(4:5);
+A_prime = flip(A_prime.').*s(:,2:3);
+A_prime = sum(A_prime,2);
 
 % Cost function vectorization
-e_San = (G_m + G_m.*(A_prime.') - B.')./vecnorm(1+A_prime.',2,2);
+e_San = (G_m + G_m.*(A_prime) - B)./vecnorm(1+A_prime,2,2);
 
 % Jacobian
 J_San = J_Levy./vecnorm(1+A_prime.',2,2);
@@ -148,6 +158,7 @@ end
 theta_San = J_San_IR\e_San_IR;
 theta_San = theta_San(1:end-1);
 
+disp(join(['Sanathanan estimated theta: ',num2str(theta_San.')]));
 %%
 % 
 %  Implemenating Gauss-Newton based least squares estimation
