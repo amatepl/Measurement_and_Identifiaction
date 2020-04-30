@@ -24,7 +24,7 @@ W = linspace(w_start,w_stop,N)';
 
 % Exact frequency response of the reference filter
 G_0 = freqs(B_tilde,A_tilde,N);
-freqs(B_tilde,A_tilde,N)
+% freqs(B_tilde,A_tilde,N)
 
 % Circular zero mean white noise
 sigma = 0.001*0;          % Standard deviation
@@ -46,10 +46,10 @@ B = polyval(B_tilde,s);
 
 %%
 % $A'(s,a) = a_{2}s^{2}+a_{1}s$
-% A_prime = A_tilde(2:end)/A_tilde(1);
-% A_prime = A_prime.'.*s(2:end,:);
-% A_prime = sum(A_prime,1);
-A_prime = polyval(A_tilde(1:2),s);
+A_prime = A_tilde(1:2);
+A_prime = A_prime.*s_all(:,1:2);
+A_prime = sum(A_prime,2);
+% A_prime = polyval(A_tilde(1:3),s);
 
 % True parameters
 % theta_true = [A_tilde(2:3) B_tilde(1:3)];
@@ -59,22 +59,22 @@ theta_true = [B_tilde(1:3) A_tilde(1:2)];
 theta_true = (theta_true).';
 
 % Plots
-figure;
-Wlog = logspace(-3,1,N);
-loglog(Wlog,abs(G_0));
-hold on;
-loglog(Wlog,abs(G_m));
-grid on;
-legend('Exact frequency response','Measured frequncy response')
-xlabel('Frequency (rad/s)');
-ylabel('Magnitude');
-
-figure;
-plot(W,db(G_0));
-hold on;
-plot(W,db(G_m));
-grid on;
-legend('Exact frequency response','Measured frequncy response');
+% figure;
+% Wlog = logspace(-3,1,N);
+% loglog(Wlog,abs(G_0));
+% hold on;
+% loglog(Wlog,abs(G_m));
+% grid on;
+% legend('Exact frequency response','Measured frequncy response')
+% xlabel('Frequency (rad/s)');
+% ylabel('Magnitude');
+% 
+% figure;
+% plot(W,db(G_0));
+% hold on;
+% plot(W,db(G_m));
+% grid on;
+% legend('Exact frequency response','Measured frequncy response');
 
 
 %%
@@ -84,16 +84,16 @@ legend('Exact frequency response','Measured frequncy response');
 % 
 
 % Cost function vectorization
-e_Levy = G_m + G_m.*(A_prime) - B;    % For perfect reconstruction
-% e_Levy = G_m ;
+% e_Levy = G_m + G_m.*(A_prime) - B;    % For perfect reconstruction
+e_Levy = G_m ;
 
 % Jacobian
 % J_Levy = [-s_all(:,1) -s_all(:,2) -s_all(:,3) G_m.*s_all(:,1) G_m.*s_all(:,2) G_m.*s_all(:,3)];
-J_Levy = [-s_all(:,3) -s_all(:,2) -s_all(:,1) G_m.*s_all(:,3) G_m.*s_all(:,2)];
+J_Levy = [-s_all(:,1) -s_all(:,2) -s_all(:,3) G_m.*s_all(:,1) G_m.*s_all(:,2)];
 
 % Real/imaginary part separation
 e_Levy_IR = [real(e_Levy) ; imag(e_Levy)]; 
-J_Levy_IR = [real(J_Levy);imag(J_Levy)];
+J_Levy_IR = [real(J_Levy) ; imag(J_Levy)];
 
 % Levy theta estimation
 theta_Levy = -J_Levy_IR\e_Levy_IR;
