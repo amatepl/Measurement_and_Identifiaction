@@ -114,61 +114,64 @@ disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end).')]));
 % 
 
 % Iteration index
-l_max = 8;
+l_max = 20;
 
 % Computing B with new parameters
 % B = (theta_Levy(1:3).').*s_all(:,1:3);
 % B = sum(B,2);
-B = polyval(theta_Levy(1:3),s)
+B = polyval(theta_Levy(1:3),s);
 
 % Computing A with new parameters
-A_prime = theta_Levy(4:5);
-A_prime = flip(A_prime.').*s(:,2:3);
-A_prime = sum(A_prime,2);
+% A_prime = theta_Levy(4:5);
+% A_prime = flip(A_prime.').*s(:,2:3);
+% A_prime = sum(A_prime,2);
+A_prime = zeros(N,1);
 
 % Cost function vectorization
 % e_San = (G_m + G_m.*(A_prime) - B)./vecnorm(1+A_prime,2,2);
-s_San = G_m;
+e_San = G_m;
 
 % Jacobian
-J_San = J_Levy./vecnorm(1+A_prime.',2,2);
+% J_San = J_Levy./vecnorm(1+A_prime.',2,2);
+J_San = J_Levy;
 
 % Real/imaginary part separation
 e_San_IR = [real(e_San) ; imag(e_San)]; 
 J_San_IR = [real(J_San);imag(J_San)];
 
-theta_San = theta_Levy; 
+theta_San = zeros(5,1); 
 
 % Sanathanan estimation
 for l = 1:l_max
     
     % Parameters computation
-    theta_San = J_San_IR\e_San_IR;
-    theta_San = theta_San(1:end-1);
+    theta_San = -J_San_IR\e_San_IR;
     
     % Computing B with new parameters
-    B = flip(theta_San(1:3).').*s(:,1:3);
-    B = sum(B,2);
-    
+    B = polyval(theta_San(1:3).',s);
+
     % Computing A with new parameters
-    A_prime_new = theta_San(4:5);
-    A_prime_new = flip(A_prime_new.').*s(:,2:3);
-    A_prime_new = sum(A_prime_new,2);
+    A_prime_new = polyval([theta_San(4:5).' 0],s);
     
     % Updating the cost function and the Jacobian
-    e_San = (G_m + G_m.*(A_prime_new) - B)./vecnorm(1+A_prime.',2,2);
-    J_San = J_Levy./vecnorm(1+A_prime.',2,2);
+    e_San = G_m ./vecnorm(1+A_prime,2,2);
+    J_San = J_Levy./vecnorm(1+A_prime,2,2);
     
     e_San_IR = [real(e_San) ; imag(e_San)]; 
-    J_San_IR = [real(J_San);imag(J_San)];
+    J_San_IR = [real(J_San) ; imag(J_San)];
     
-    % Sacing the previous A_prime
-    A_prime = A_prime_new.';
+    % Saving the previous A_prime
+    A_prime = A_prime_new;
 end
 
 % Parameters computation
-theta_San = J_San_IR\e_San_IR;
-theta_San = theta_San(1:end-1);
+% theta_San = -J_San_IR\e_San_IR;
+
+GestSan = freqs(theta_San(1:3),[theta_San(4:5); 1],W);
+%%
+figure
+plot(W,db(GestSan),'o',W,db(G_m),'*',W,db(G_0),'+')
+legend('Sanathanan','G_m','G_0')
 
 disp(join(['Sanathanan estimated theta: ',num2str(theta_San.')]));
 %%

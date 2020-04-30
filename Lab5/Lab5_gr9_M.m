@@ -27,7 +27,7 @@ G_0 = freqs(B_tilde,A_tilde,W);
 % freqs(B_tilde,A_tilde,N)
 
 % Circular zero mean white noise
-sigma = 0.001*0;          % Standard deviation
+sigma = 0.0001;          % Standard deviation
 noise = sigma*(randn(N,1) + 1i*randn(N,1))/sqrt(2);
 
 % Measured frequncy response
@@ -35,7 +35,9 @@ G_m = G_0 + noise;
 
 % Rewrite the transfer funciton
 s = 1i*W;
-s_all = s.^((0:length(B_tilde)-1));
+%s_all = s.^((0:length(B_tilde)-1));
+nB = length(B_tilde)-1;
+s_all = repmat(s,1,nB+1).^(repmat(0:nB,N,1));
 s_all = fliplr(s_all);
 
 %%
@@ -86,7 +88,7 @@ theta_true = (theta_true).';
 % Cost function vectorization
 e_Levy = G_m ;
 
-% Jacobian
+% Jacobian % Theta: b2 b1 b0 a2 a1
 J_Levy = [-s_all(:,1) -s_all(:,2) -s_all(:,3) G_m.*s_all(:,1) G_m.*s_all(:,2)];
 
 % Real/imaginary part separation
@@ -101,9 +103,9 @@ GestLevy = freqs(theta_Levy(1:3),[theta_Levy(4:5); 1],W);
 figure
 plot(W,db(GestLevy),'o',W,db(G_m),'*',W,db(G_0),'+')
 
-disp('Parameters comparison'); 
-disp(join(['True theta:           ',num2str(theta_true.')]));
-disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end).')]));
+%disp('Parameters comparison'); 
+%disp(join(['True theta:           ',num2str(theta_true.')]));
+%disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end).')]));
 % disp(join(['Difference:           ',num2str(theta_true.' - theta_Levy(1:end-1).')]));
 
 
@@ -114,7 +116,7 @@ disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end).')]));
 % 
 
 % Iteration index
-l_max = 2;
+l_max = 20;
 
 % Computing B with new parameters
 % B = (theta_Levy(1:3).').*s_all(:,1:3);
@@ -125,25 +127,33 @@ B = polyval(theta_Levy(1:3),s);
 % A_prime = theta_Levy(4:5);
 % A_prime = flip(A_prime.').*s(:,2:3);
 % A_prime = sum(A_prime,2);
-A_prime = zeros(N,1);
+%A_prime = zeros(N,1);
+A = polyval([theta_Levy(4:5); 1],s);
 
 % Cost function vectorization
 % e_San = (G_m + G_m.*(A_prime) - B)./vecnorm(1+A_prime,2,2);
-e_San = G_m;
+%e_San = G_m;
 
 % Jacobian
 % J_San = J_Levy./vecnorm(1+A_prime.',2,2);
-J_San = J_Levy;
+%J_San = J_Levy;
 
-% Real/imaginary part separation
-e_San_IR = [real(e_San) ; imag(e_San)]; 
-J_San_IR = [real(J_San);imag(J_San)];
 
-theta_San = zeros(5,1); 
+
+%theta_San = zeros(5,1); 
 
 % Sanathanan estimation
 for l = 1:l_max
     
+    % Updating the cost function and the Jacobian
+    %e_San = (G_m + G_m.*(A_prime_new) - B)./vecnorm(1+A_prime,2,2);
+    
+    e_San = G_m./abs(A);
+    %J_San = J_Levy./vecnorm(1+A_prime,2,2);
+    J_San = J_Levy./repmat(1./abs(A),1,size(J_Levy,2));
+    % Real/imaginary part separation
+    e_San_IR = [real(e_San) ; imag(e_San)]; 
+    J_San_IR = [real(J_San); imag(J_San)];
     % Parameters computation
     theta_San = -J_San_IR\e_San_IR;
     
@@ -151,29 +161,21 @@ for l = 1:l_max
     B = polyval(theta_San(1:3).',s);
 
     % Computing A with new parameters
-    A_prime_new = polyval([theta_San(4:5).' 0],s);
-    
-    % Updating the cost function and the Jacobian
-    e_San = (G_m + G_m.*(A_prime_new) - B)./vecnorm(1+A_prime,2,2);
-    J_San = J_Levy./vecnorm(1+A_prime,2,2);
-    
-    e_San_IR = [real(e_San) ; imag(e_San)]; 
-    J_San_IR = [real(J_San) ; imag(J_San)];
-    
-    % Saving the previous A_prime
-    A_prime = A_prime_new;
+    %A_prime_new = polyval([theta_San(4:5).' 0],s);
+    A = polyval([theta_San(4:5).' 1],s); 
+    % Sacing the previous A_prime
+    %A_prime = A_prime_new;
 end
 
 % Parameters computation
 % theta_San = -J_San_IR\e_San_IR;
 
 GestSan = freqs(theta_San(1:3),[theta_San(4:5); 1],W);
-%%
+
 figure
 plot(W,db(GestSan),'o',W,db(G_m),'*',W,db(G_0),'+')
-legend('Sanathanan','G_m','G_0')
 
-disp(join(['Sanathanan estimated theta: ',num2str(theta_San.')]));
+%disp(join(['Sanathanan estimated theta: ',num2str(theta_San.')]));
 %%
 % 
 %  Implemenating Gauss-Newton based least squares estimation
