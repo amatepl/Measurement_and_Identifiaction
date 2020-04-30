@@ -46,10 +46,10 @@ B = polyval(B_tilde,s);
 
 %%
 % $A'(s,a) = a_{2}s^{2}+a_{1}s$
-A_prime = A_tilde(1:2);
-A_prime = A_prime.*s_all(:,1:2);
-A_prime = sum(A_prime,2);
-% A_prime = polyval(A_tilde(1:3),s);
+% A_prime = A_tilde(1:2);
+% A_prime = A_prime.*s_all(:,1:2);
+% A_prime = sum(A_prime,2);
+A_prime = polyval([A_tilde(1:2) 0],s);
 
 % True parameters
 % theta_true = [A_tilde(2:3) B_tilde(1:3)];
