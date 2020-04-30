@@ -12,6 +12,9 @@ clear;close all;clc;
 
 [B_tilde,A_tilde] = butter(1,[0.01,0.2],'s');
 
+B_tilde = B_tilde/A_tilde(3);
+A_tilde = A_tilde/A_tilde(3);
+
 w_start = 0;
 w_stop = 1;
 
@@ -33,6 +36,7 @@ G_m = G_0 + noise;
 % Rewrite the transfer funciton
 s = 1i*W;
 s_all = s.^((0:length(B_tilde)-1));
+s_all = fliplr(s_all);
 
 %%
 % $B(s,a) = b_{2}s^{2}+b_{1}s+b_{0}$
@@ -45,11 +49,14 @@ B = polyval(B_tilde,s);
 % A_prime = A_tilde(2:end)/A_tilde(1);
 % A_prime = A_prime.'.*s(2:end,:);
 % A_prime = sum(A_prime,1);
-A_prime = polyval(A_tilde(2:3),s);
+A_prime = polyval(A_tilde(1:2),s);
 
 % True parameters
-theta_true = [A_tilde(2:3) B_tilde(1:3)];
-theta_true = flip(theta_true).';
+% theta_true = [A_tilde(2:3) B_tilde(1:3)];
+% theta_true = fliplr(theta_true).';
+
+theta_true = [B_tilde(1:3) A_tilde(1:2)];
+theta_true = (theta_true).';
 
 % Plots
 figure;
@@ -77,11 +84,12 @@ legend('Exact frequency response','Measured frequncy response');
 % 
 
 % Cost function vectorization
-% e_Levy = G_m + G_m.*(A_prime.') - B.';    % For perfect reconstruction
-e_Levy = G_m ;
+e_Levy = G_m + G_m.*(A_prime) - B;    % For perfect reconstruction
+% e_Levy = G_m ;
 
 % Jacobian
-J_Levy = [-s_all(:,3) -s_all(:,2) -s_all(:,1) G_m.*s_all(:,3) G_m.*s_all(:,2) G_m.*s_all(:,1)];
+% J_Levy = [-s_all(:,1) -s_all(:,2) -s_all(:,3) G_m.*s_all(:,1) G_m.*s_all(:,2) G_m.*s_all(:,3)];
+J_Levy = [-s_all(:,3) -s_all(:,2) -s_all(:,1) G_m.*s_all(:,3) G_m.*s_all(:,2)];
 
 % Real/imaginary part separation
 e_Levy_IR = [real(e_Levy) ; imag(e_Levy)]; 
@@ -90,9 +98,9 @@ J_Levy_IR = [real(J_Levy);imag(J_Levy)];
 % Levy theta estimation
 theta_Levy = -J_Levy_IR\e_Levy_IR;
 
-disp('Parameters comparison');
+disp('Parameters comparison'); 
 disp(join(['True theta:           ',num2str(theta_true.')]));
-disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end-1).')]));
+disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end).')]));
 % disp(join(['Difference:           ',num2str(theta_true.' - theta_Levy(1:end-1).')]));
 
 keyboard
