@@ -27,7 +27,7 @@ G_0 = freqs(B_tilde,A_tilde,W);
 % freqs(B_tilde,A_tilde,N)
 
 % Circular zero mean white noise
-sigma = 0.001*0;          % Standard deviation
+sigma = 0.001;          % Standard deviation
 noise = sigma*(randn(N,1) + 1i*randn(N,1))/sqrt(2);
 
 % Measured frequncy response
@@ -39,17 +39,10 @@ s_all = s.^((0:length(B_tilde)-1));
 s_all = fliplr(s_all);
 
 %%
-% $B(s,a) = b_{2}s^{2}+b_{1}s+b_{0}$
-% B = (B_tilde).*s_all/A_tilde(1);
-% B = sum(B,2);
-B = polyval(B_tilde,s);
+B_true = polyval(B_tilde,s);
 
 %%
-% $A'(s,a) = a_{2}s^{2}+a_{1}s$
-% A_prime = A_tilde(1:2);
-% A_prime = A_prime.*s_all(:,1:2);
-% A_prime = sum(A_prime,2);
-A_prime = polyval([A_tilde(1:2) 0],s);
+A_prime_true = polyval([A_tilde(1:2) 0],s);
 
 % True parameters
 % theta_true = [A_tilde(2:3) B_tilde(1:3)];
@@ -114,25 +107,18 @@ disp(join(['Levy estimated theta: ',num2str(theta_Levy(1:end).')]));
 % 
 
 % Iteration index
-l_max = 2;
+l_San_max = 20;
 
 % Computing B with new parameters
-% B = (theta_Levy(1:3).').*s_all(:,1:3);
-% B = sum(B,2);
 B = polyval(theta_Levy(1:3),s);
 
 % Computing A with new parameters
-% A_prime = theta_Levy(4:5);
-% A_prime = flip(A_prime.').*s(:,2:3);
-% A_prime = sum(A_prime,2);
 A_prime = zeros(N,1);
 
 % Cost function vectorization
-% e_San = (G_m + G_m.*(A_prime) - B)./vecnorm(1+A_prime,2,2);
 e_San = G_m;
 
 % Jacobian
-% J_San = J_Levy./vecnorm(1+A_prime.',2,2);
 J_San = J_Levy;
 
 % Real/imaginary part separation
@@ -142,7 +128,7 @@ J_San_IR = [real(J_San);imag(J_San)];
 theta_San = zeros(5,1); 
 
 % Sanathanan estimation
-for l = 1:l_max
+for l = 1:l_San_max
     
     % Parameters computation
     theta_San = -J_San_IR\e_San_IR;
@@ -154,7 +140,7 @@ for l = 1:l_max
     A_prime_new = polyval([theta_San(4:5).' 0],s);
     
     % Updating the cost function and the Jacobian
-    e_San = (G_m + G_m.*(A_prime_new) - B)./vecnorm(1+A_prime,2,2);
+    e_San = G_m ./vecnorm(1+A_prime,2,2);
     J_San = J_Levy./vecnorm(1+A_prime,2,2);
     
     e_San_IR = [real(e_San) ; imag(e_San)]; 
@@ -164,14 +150,13 @@ for l = 1:l_max
     A_prime = A_prime_new;
 end
 
-% Parameters computation
-% theta_San = -J_San_IR\e_San_IR;
-
 GestSan = freqs(theta_San(1:3),[theta_San(4:5); 1],W);
 %%
-figure
+figure('Name','Sanathanan estimation')
 plot(W,db(GestSan),'o',W,db(G_m),'*',W,db(G_0),'+')
 legend('Sanathanan','G_m','G_0')
+xlabel('Freq [rad]');
+ylabel('Magn [dB]');
 
 disp(join(['Sanathanan estimated theta: ',num2str(theta_San.')]));
 %%
@@ -180,4 +165,52 @@ disp(join(['Sanathanan estimated theta: ',num2str(theta_San.')]));
 %  
 % 
 
+% Initial parameters
+theta_GN = theta_Levy;
+
+% Number of iterations
+l_GN_max = 20;
+
+for l = 1:l_GN_max
+    
+    % Computing B with new parameters
+    B = polyval(theta_GN(1:3).',s);
+
+    % Computing A with new parameters
+    A = polyval([theta_GN(4:5).' 1],s);
+    
+    % Cost function
+    e_GN = G_m - B./A;
+    
+    % Jacobian
+    J_GN = [-s_all(:,1) -s_all(:,2) -s_all(:,3) B.*s_all(:,1)./A B.*s_all(:,2)./A]./A;
+    
+    % Real values matrices
+    e_GN_IR = [real(e_GN) ; imag(e_GN)]; 
+    J_GN_IR = [real(J_GN) ; imag(J_GN)];
+    
+    % Delta theta
+    delta_theta = -J_GN_IR\e_GN_IR;
+    
+    % Theta(l+1) = theta(l) + delta_theta
+    theta_GN = theta_GN + delta_theta;
+    
+end
+
+GestGN = freqs(theta_GN(1:3),[theta_GN(4:5); 1],W);
+freqs(theta_GN(1:3),[theta_GN(4:5); 1],W);
+%%
+figure('Name','Maximum likelihood estimation')
+plot(W,db(GestGN),'o',W,db(G_m),'*',W,db(G_0),'+')
+legend('Maximum likelihood estimation','G_m','G_0')
+xlabel('Freq [rad]');
+ylabel('Magn [dB]');
+
+Wlog = logspace(w_start,w_stop,N)';
+Bias = G_0 - GestGN;
+figure('Name','Maximum likelihood estimation')
+semilogx(W,db(GestGN),W,db(G_m),'*',W,db(e_GN),'+',W,db(sigma*ones(N,1)),W,db(Bias))
+legend('Maximum likelihood','G_m','e_{LS}','\sigma_{means}','Bias')
+xlabel('Freq [rad]');
+ylabel('Magn [dB]');
 
