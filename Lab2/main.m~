@@ -1,0 +1,21 @@
+clear; close all;clc;
+%% Multisine generation
+% Parameters
+N1 = 4000;
+V_RMS = 0.5;
+K_min = 4;
+K_max = 1000;
+K = K_min:K_max;
+
+% Random phase multisine
+phi = 2*pi*rand([K_min,K_max]);
+
+% Schroeder phase multisine
+phi = K.*(K+1)*pi/length(K);
+
+% Frequency domain construction
+X = zeros(N,1);
+X(K_min+1:K_max+1) = exp(1j*phi);
+x = N*real(ifft(X));
+% u_sch_500 = x*0.1/rms(x);
+u_sch_500 = x*sqrt(length(x))/norm(x);

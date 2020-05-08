@@ -4,7 +4,7 @@
 %
 %
 
-function H = FRF(Su,Sy)
+function H = FRF(Su,Sy,threshold)
 
 % FFT
 U = fftshift(fft(Su));
@@ -19,6 +19,9 @@ Y = fftshift(fft(Sy));
 %
 
 % FRF computation
-threshold = 0.00; 
+% threshold = 0.00; 
 
 H = Y(abs(U) >threshold)./U(abs(U) > threshold);
+
+% threshold = 5.0; 
+% H(abs(U) <threshold)=0;
