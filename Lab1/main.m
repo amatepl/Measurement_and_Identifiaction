@@ -464,19 +464,28 @@ title('Aperiodic times Hanning');
 xlim([-500 500]);
 xlabel('Frequency [Hz]');
 
-figure; hold on;
+figure('Name','FRF for noises'); hold on;
 subplot(1,3,1);
-plot(fq,abs(frf9));
+plot(fq,abs(frf9),'LineWidth',2);
 title('FRF periodic noise')
 %xlim([-500 500]);
 subplot(1,3,2);
-plot(fq,abs(frf1));
+plot(fq,abs(frf1),'LineWidth',2);
 title('FRF aperiodic noise')
 subplot(1,3,3);
-
-frf1 = FRF(Su1.*Hann,Sy1.*Hann,0);
-plot(fq,abs(frf1));
+frf1 = FRF(Su.*Hann,Sy.*Hann,0);
+plot(fq,abs(frf1),'LineWidth',2);
 title('FRF aperiodic noise times Hann')
+
+
+figure;
+plot(fq,abs(frf9));hold on;
+plot(fq,abs(frf1));
+plot(fq,abs(FRF(Su.*Hann,Sy.*Hann,0)));
+xlim([-500 500]);
+ylim([0 1]);
+xlabel('Frequency [Hz]');
+legend('FRF periodic noise','FRF aperiodic noise','FRF aperiodic noise times Hanning')
 
 figure; hold on;
 plot(fq,abs(frf9));
@@ -484,14 +493,16 @@ xlabel('Frequency [Hz]');
 xlim([-500 500]);
 title('FRF periodic noise')
 %xlim([-500 500]);
+
 figure; hold on;
 plot(fq,abs(frf1));
 xlabel('Frequency [Hz]');
 xlim([-500 500]);
 title('FRF aperiodic noise')
+
 figure; hold on;
 [Hann] = hanning(length(Sy1),'periodic');
-frf1 = FRF(Su1.*Hann,Sy1.*Hann,0);
+frf1 = FRF(Su.*Hann,Sy.*Hann,0);
 plot(fq,abs(frf1));
 xlabel('Frequency [Hz]');
 xlim([-500 500]);
