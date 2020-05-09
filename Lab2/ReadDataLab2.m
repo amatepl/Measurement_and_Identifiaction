@@ -31,11 +31,14 @@ for iRep=0:Nrep-1
     end
     umat_allrep(:,iRep+1) = getfield(outData, NameVar_u);    
     ymat_allrep(:,iRep+1) = getfield(outData, NameVar_y);
+
+%     umat_allrep(:,iRep+1) = outData.(NameVar_u);    
+%     ymat_allrep(:,iRep+1) = outData.(NameVar_y);
 end
 
 
 
-umat = umat_allrep(:,Nrep-Drep:end);
-ymat = ymat_allrep(:,Nrep-Drep:end);
+umat = umat_allrep(:,Nrep-Drep+1:end);
+ymat = ymat_allrep(:,Nrep-Drep+1:end);
 
 end
