@@ -7,3 +7,4 @@ S_YU = sum(Y.*(conj(U)),2)/size(U,2);
 S_UU = sum(U.*(conj(U)),2)/size(U,2);
 
 H = S_YU./S_UU;
+H = fftshift(H);
